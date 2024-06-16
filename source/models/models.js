@@ -1,11 +1,13 @@
 import dotenv from 'dotenv';
 import { MongoClient, ServerApiVersion } from 'mongodb';
+
 dotenv.config();
+
 const user = process.env.USERNAME;
 const password = process.env.PASSWORD;
 const cluster_url = process.env.CLUSTER_URL;
-const url = `mongodb+srv://${user}:${password}@${cluster_url}.9ei9em9.mongodb.net/?retryWrites=true&w=majority&appName=node-js-demo`;
-//console.log(url);
+const url = `mongodb+srv://dbspeedytweety675:${password}@${cluster_url}.nstt6sc.mongodb.net/?retryWrites=true&w=majority&appName=${cluster_url}`;
+console.log(url);
 const client = new MongoClient(url, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -13,8 +15,8 @@ const client = new MongoClient(url, {
         deprecationErrors: true,
     }
 });
-const dbName = "node-js-demo";
-const collectionName = "people";
+let dbName = "Spring2024NodeJS";
+let collectionName = "people";
 
 async function connectToDatabase() {
     try {
@@ -25,7 +27,6 @@ async function connectToDatabase() {
         console.error('Error connecting to MongoDB:', err);
     }
 }
-
 
 async function getPeople() {
     try {
@@ -40,10 +41,9 @@ async function getPeople() {
     } 
 }
 
-
 async function createPerson(person) {
     try {
-        connectToDatabase();
+        await connectToDatabase();
         const database = client.db(dbName);
         const collection = database.collection(collectionName);
         const result = await collection.insertOne(person);
@@ -52,13 +52,11 @@ async function createPerson(person) {
     } catch (err) {
         console.error('Error creating person:', err);
     }
-    closeConnectionToDatabase();
 }
-
 
 async function updatePerson(filter, update) {
     try {
-        connectToDatabase();
+        await connectToDatabase();
         const database = client.db(dbName);
         const collection = database.collection(collectionName);
         const result = await collection.updateOne(filter, { $set: update });
@@ -68,9 +66,7 @@ async function updatePerson(filter, update) {
     } catch (err) {
         console.error('Error updating person:', err);
     }
-    closeConnectionToDatabase();
 }
-
 
 export {
     getPeople,

@@ -1,5 +1,5 @@
 {
-  "name": "js-demo",
+  "name": "node-js-demo",
   "version": "1.0.0",
   "description": "node dem",
   "type": "module",
@@ -12,7 +12,7 @@
   "keywords": [
     "node"
   ],
-  "author": "michael",
+  "author": "David",
   "license": "ISC",
   "dependencies": {
     "babel-cli": "^6.26.0",

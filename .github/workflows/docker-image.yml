@@ -1,117 +1,93 @@
 name: Docker Image CI
-
 on:
   pull_request:
     types:
       - closed
-
     paths-ignore:
-      - 'README.md'
-  
+      - "README.md"
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
 # Define the access that the GITHUB_TOKEN will permit
 permissions: write-all
-
 jobs:
   test-build:
     name: Test | Build a Docker Image
     environment: test
     runs-on: ubuntu-latest
-
-    # run this job only when PR is approved
+    # run this job only when Pull Request is approved
     if: github.event.pull_request.merged == true
-
     steps:
-    - 
-      name: Check out into Repo
-      uses: actions/checkout@v4
-    - 
-      name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
-
+      - name: Check out into Repo
+        uses: actions/checkout@v4
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
   # This job build a docker images from the dockerfile in our repo
-  # and push that docker image to Docker Hub. More inof here: 
+  # and push that docker image to Docker Hub. More info here:
   # https://github.com/marketplace/actions/build-and-push-docker-images
   deploy-to-dockerhub:
     name: Prod | Deploy to DockerHub
     environment: prod
-
-    # This is the runner aka container/machine where 
+    # This is the runner aka container/machine where
     #our deployment pipeline is going to run.
     runs-on: ubuntu-latest
-
-    # only deploy to prod when test was successful 
+    # only deploy to prod when test was successful
     needs: test-build
-    
     steps:
-      - 
-        name: Check out into the repo
+      - name: Check out into the repo
         uses: actions/checkout@v4
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      -
-        name: Login to Docker Hub
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ vars.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           push: true
-          # neisguy/nodejs-backend:tagname
-          # dockerhub username / dockerhub reposiroty : the image tag
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/nodejs-backend:latest
-
-  # Deplopy the docker image to Amazon ECR
+          # dockerhub username / dockerhub repository : the image tag
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/node-js-demo:latest
+  # Deploy the docker image to Amazon ECR
   deploy-to-ecr:
     name: Prod | Deploy to ECR
     environment: aws
     runs-on: ubuntu-latest
-
-    # run prod deployment job only if test deployment was 
+    # run prod deployment job only if test deployment was
     # successful
     needs: test-build
-
     steps:
       - name: Repo Checkout
         uses: actions/checkout@v4
-
       - name: Run on PR approved
         run: |
           echo "PullRequest was reviewed, approved, and Merged"
           echo "Prod deployment was reviewed and approved"
-        
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-           aws-region: ${{vars.REGION}}
-           role-to-assume: ${{vars.IAM_ROLE}}
-           role-session-name: deploy-docker-image-to-ecr
-
-      - name: Validate IAM role Access
-         # list all the repositories in the default registry of your account.
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ vars.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build, tag, and push image to Amazon ECR
         run: |
-           aws ecr describe-repositories
-
+          # Build, tag, and push Docker image to ECR
+          docker build -t ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{ vars.AWS_ECR_REPO_NAME }}:latest .
+          docker push ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{ vars.AWS_ECR_REPO_NAME }}:latest
   # Contributors-Readme-Action is a simple GitHub action to automate contributors
-  # list in README file. Not only contributors, collborators, bots or any user.
+  # list in README file. Not only contributors, collaborators, bots or any user.
   # More info: https://github.com/marketplace/actions/contribute-list
   contributors-readme:
     name: Update Contributors List
     runs-on: ubuntu-latest
-
     # update contributor list when new code was
     # successful validated, scanned and deployed to prod
     needs: deploy-to-dockerhub
-    
     steps:
       - name: Contribute List
         uses: akhilmhdh/contributors-readme-action@v2.3.8
