@@ -1,5 +1,5 @@
 FROM node
-LABEL authors="Michael Neis"
+LABEL authors="David Braun"
 # update dependencies and install curl
 RUN apt-get update && apt-get install -y \
     curl \
