@@ -1,24 +1,26 @@
 import express from 'express';
 import routes from './source/routes/routes.js';
+import cors from 'cors';
 
-
-// variable
+// Variables
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
-// app.use(cors());
+// CORS configuration
+const corsOptions = {
+  origin: 'https://main--frontend-nodejs.netlify.app', // Replace with your frontend URL
+  optionsSuccessStatus: 200
+};
 
-//body parses
-//create Javascrip array from req parses
+// Middleware
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 // Application routes
-// connect our application to Express app
-
 routes(app);
 
-app.listen(PORT, function(){
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, HOST, function () {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
