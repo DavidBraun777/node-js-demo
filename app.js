@@ -7,9 +7,20 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
-// CORS configuration
+// Allowed origins
+const allowedOrigins = [
+  'https://main--frontend-nodejs.netlify.app',
+  'https://frontend-nodejs.netlify.app'
+];
+
 const corsOptions = {
-  origin: 'https://main--frontend-nodejs.netlify.app', // Replace with your frontend URL
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   optionsSuccessStatus: 200
 };
 
